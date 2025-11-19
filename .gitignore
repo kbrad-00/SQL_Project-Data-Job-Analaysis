@@ -1,0 +1,4 @@
+all_folders/
+.vscode/
+*.csv
+*.session
