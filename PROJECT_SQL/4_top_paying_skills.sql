@@ -1,24 +1,83 @@
 /*
 Answer: What are the top skills based on salary?
-- Look at the average salary associated with each skill for Data Analyst positions
-- Focuses on roles with specified salaries, regardless of location
-- Why? It reveals how different skills impact salary levels for Data Analysts and 
-    helps identify the most financially rewarding skills to acquire or improve
+
+Goal:
+- Identify which skills are associated with the highest salaries for Data Analyst roles.
+- We only look at postings that actually list a salary (salary_year_avg IS NOT NULL).
+- We don’t limit by remote or location — this is ALL Data Analyst roles everywhere.
+
+Why this matters:
+- It shows which skills “push up” your salary the most.
+- Some skills may not be used often, but when they ARE used, the pay is extremely high.
+- This is useful for figuring out niche, high-value skills worth learning.
+
+What the query does:
+1. JOIN job postings → skills_job_dim (to know which job uses which skill)
+2. JOIN again → skills_dim (to get the skill name)
+3. Filter for “Data Analyst” roles only (using ILIKE so it picks up variations)
+4. Only include jobs with a real salary number
+5. GROUP BY skill_name → calculate the AVG salary for each skill
+6. ORDER BY avg_salary DESC → highest paying skills at the top
+7. LIMIT 25 → top 25 skills by salary
 */
 
 SELECT
-    sd.skills as skill_name,
-    round(AVG(jpf.salary_year_avg), 0) as avg_salary
-    from job_postings_fact as jpf
-    inner join skills_job_dim as skd
-        on jpf.job_id = skd.job_id
-    inner join skills_dim as sd
-        on skd.skill_id = sd.skill_id
-        where jpf.salary_year_avg is not null 
-        and jpf.job_title_short ilike '%data analyst%'
-        GROUP BY skill_name
-        order by avg_salary DESC
-        LIMIT 25;
+    sd.skills AS skill_name,
+    ROUND(AVG(jpf.salary_year_avg), 0) AS avg_salary
+FROM job_postings_fact AS jpf
+INNER JOIN skills_job_dim AS skd
+    ON jpf.job_id = skd.job_id
+INNER JOIN skills_dim AS sd
+    ON skd.skill_id = sd.skill_id
+WHERE jpf.salary_year_avg IS NOT NULL 
+  AND jpf.job_title_short ILIKE '%data analyst%'
+GROUP BY sd.skills
+ORDER BY avg_salary DESC
+LIMIT 25;
+
+
+/*
+Findings Summary (Natural Explanation):
+
+This output shows something important:
+The highest-paying “skills” aren’t always the common ones like SQL or Python.
+Instead, niche or specialized tools shoot to the top because:
+- only a few people know them
+- they appear in very advanced or senior positions
+- many are tied to machine learning, cloud engineering, or high-security systems
+
+For example:
+- svn ($400k)
+- solidity ($179k)
+- couchbase ($160k)
+These aren’t typical BI/Data Analyst tools — they show up in hybrid engineering or blockchain roles.
+
+The list also highlights strong ML frameworks:
+- mxnet
+- pytorch
+- tensorflow
+These appear in high-paying data science or ML-heavy analyst roles.
+
+Even cloud + automation shows strong influence:
+- terraform
+- ansible
+- puppet
+- kafka
+These skills often pair with analytics roles touching infrastructure or automation.
+
+Key Insight:
+This query helps answer:
+“What SINGLE skill, when present in a Data Analyst job, correlates with the highest salaries?”
+
+It doesn’t measure demand — only pay.  
+Which means some skills pay a LOT but aren’t required often.
+
+Final takeaway:
+If you’re aiming for “high-salary niche expertise,”  
+skills on this list (solidity, kafka, terraform, pytorch, etc.)  
+push roles into $150k–$300k+ territory depending on niche and industry.
+*/
+
 
 [
   {
@@ -122,3 +181,4 @@ SELECT
     "avg_salary": "115480"
   }
 ]
+
